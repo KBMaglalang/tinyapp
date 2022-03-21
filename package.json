@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/KBMaglalang/tinyapp/issues"
   },
-  "homepage": "https://github.com/KBMaglalang/tinyapp#readme"
+  "homepage": "https://github.com/KBMaglalang/tinyapp#readme",
+  "dependencies": {
+    "express": "^4.17.3"
+  }
 }
