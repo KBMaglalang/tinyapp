@@ -9,6 +9,9 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+app.set('view enginer', 'ejs');
+
+
 app.get('/', (req, res) => {
   res.send("Hello");
 });
