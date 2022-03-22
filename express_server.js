@@ -57,12 +57,22 @@ app.post('/urls', (req, res) => {
 
 // showing the user their newly created link
 app.get("/urls/:shortURL", (req, res) => {
+  if (!urlDatabase[req.params.shortURL]) {
+    res.statusCode = 404;
+    res.statusMessage = 'Not Found';
+    return res.send(`Provided shortURL [${req.params.shortURL}] not found in database`);
+  }
   const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
   res.render("urls_show", templateVars);
 });
 
 // redirect to the new web form
 app.get("/u/:shortURL", (req, res) => {
+  if (!urlDatabase[req.params.shortURL]) {
+    res.statusCode = 404;
+    res.statusMessage = 'Not Found';
+    return res.send(`Provided shortURL [${req.params.shortURL}] not found in database`);
+  }
   const longURL = urlDatabase[req.params.shortURL];
   res.redirect(longURL);
 });
