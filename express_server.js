@@ -57,9 +57,14 @@ app.post('/urls', (req, res) => {
 
 // delete the url
 app.post('/urls/:shortURL/delete', (req, res)=> {
-  // console.log(req.params.shortURL);
   delete urlDatabase[req.params.shortURL];
   res.redirect('/urls');
+});
+
+// edit the url
+app.post('/urls/:shortURL', (req, res)=> {
+  urlDatabase[req.params.shortURL] = req.body.longURL;
+  res.redirect(`/urls/${req.params.shortURL}`);
 });
 
 // showing the user their newly created link
