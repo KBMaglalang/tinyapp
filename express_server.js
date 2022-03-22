@@ -55,6 +55,13 @@ app.post('/urls', (req, res) => {
   res.redirect(`/urls/${newShortURL}`);
 });
 
+// delete the url
+app.post('/urls/:shortURL/delete', (req, res)=> {
+  // console.log(req.params.shortURL);
+  delete urlDatabase[req.params.shortURL];
+  res.redirect('/urls');
+});
+
 // showing the user their newly created link
 app.get("/urls/:shortURL", (req, res) => {
   if (!urlDatabase[req.params.shortURL]) {
