@@ -2,12 +2,13 @@
 
 const express = require('express');
 const bodyParser = require("body-parser");
+const cookieParser = require('cookie-parser');
 const app = express();
 const PORT = 8080;
 
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended: true}));
-
+app.use(cookieParser());
 
 
 const urlDatabase = {
@@ -26,6 +27,7 @@ const generateRandomString = function() {
   return result;
 };
 
+// root page
 app.get('/', (req, res) => {
   res.send("Hello");
 });
@@ -35,14 +37,27 @@ app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
+// login endpoint
+app.post('/login', (req, res) => {
+  res.cookie('username', req.body["username"]);
+  res.redirect('/urls');
+});
+
+// logout endpoint
+app.post('/logout', (req, res) => {
+  res.clearCookie('username');
+  res.redirect('/urls');
+});
+
 // create a new shortened url web form
 app.get('/urls/new', (req,res) => {
-  res.render('urls_new');
+  const templateVars = { username: req.cookies["username"] };
+  res.render('urls_new', templateVars);
 });
 
 // show the list of urls that is stored
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase };
+  const templateVars = { urls: urlDatabase, username: req.cookies["username"] };
   res.render("urls_index", templateVars);
 });
 
@@ -72,7 +87,9 @@ app.get("/urls/:shortURL", (req, res) => {
     res.statusMessage = 'Not Found';
     return res.send(`Provided shortURL [${req.params.shortURL}] not found in database`);
   }
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
+  const templateVars = { shortURL: req.params.shortURL,
+    longURL: urlDatabase[req.params.shortURL],
+    username: req.cookies["username"]  };
   res.render("urls_show", templateVars);
 });
 
@@ -88,5 +105,5 @@ app.get("/u/:shortURL", (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}`);
+  console.log(`Tiny app listening on port ${PORT}`);
 });
