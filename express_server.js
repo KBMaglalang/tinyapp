@@ -71,6 +71,12 @@ app.post('/logout', (req, res) => {
 
 // user login page
 app.get("/login", (req, res) => {
+  // !!! subject to change
+  if (users[req.cookies.user_id]) {
+    res.redirect('/urls');
+    return;
+  }
+
   const templateVars = { urls: urlDatabase, user: users[req.cookies.user_id] };
   res.render("login", templateVars);
 });
@@ -97,6 +103,12 @@ app.post('/login', (req, res) => {
 
 // user registration page
 app.get('/register', (req,res) => {
+  // !!! subject to change
+  if (users[req.cookies.user_id]) {
+    res.redirect('/urls');
+    return;
+  }
+
   const templateVars = {user: users[req.cookies.user_id]};
   res.render('register', templateVars);
 });
