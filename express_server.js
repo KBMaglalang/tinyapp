@@ -3,19 +3,14 @@
 const express = require('express');
 const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser');
-const app = express();
-const PORT = 8080;
 
+const PORT = 8080;
+const app = express();
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 
 
-
-// const urlDatabase = {
-//   "b2xVn2": "http://www.lighthouselabs.ca",
-//   "9sm5xK": "http://www.google.com/"
-// };
 
 const urlDatabase = {
   b6UTxQ: {
@@ -25,6 +20,10 @@ const urlDatabase = {
   i3BoGr: {
     longURL: "https://www.google.ca",
     userID: "userRandomID"
+  },
+  asdfqw: {
+    longURL: "https://www.google.ca",
+    userID: "user2RandomID"
   }
 };
 
@@ -42,7 +41,15 @@ const users = {
   }
 };
 
-
+const urlsForUser = function(id) {
+  let userURL = {};
+  for (let key in urlDatabase) {
+    if (urlDatabase[key].userID === id) {
+      userURL[key] = urlDatabase[key];
+    }
+  }
+  return userURL;
+};
 
 const isUserEmailInDatabase = function(userEmail) {
   for (const key in users) {
@@ -59,7 +66,6 @@ const generateRandomString = function() {
   for (let i = 0; i < 6; i++) {
     result += characters.charAt(Math.floor(Math.random() * characters.length));
   }
-
   return result;
 };
 
@@ -86,26 +92,25 @@ app.get("/login", (req, res) => {
     res.redirect('/urls');
     return;
   }
-
   const templateVars = { user: users[req.cookies.user_id] };
-  res.render("login", templateVars);
+  res.render("urls_login", templateVars);
 });
 app.post('/login', (req, res) => {
   // check if the user doesn't exist in the datbase
+  if (!req.body.email || !req.body.password) {
+    return res.status(400).send(`Cannot Leave Email and Password Empty`);
+  }
+  
   let userData = isUserEmailInDatabase(req.body.email);
   if (userData === false) {
-    res.statusCode = 403;
-    res.statusMessage = 'Forbidden';
-    return res.send(`User Does Not Exist in Database`);
+    return res.status(403).send(`User Does Not Exist in Database`);
   }
 
   // check if the password matches with the one stored in the datbase
   if (userData.password !== req.body.password) {
-    res.statusCode = 403;
-    res.statusMessage = 'Forbidden';
-    return res.send(`Incorrect Password`);
+    return res.status(403).send(`Incorrect Password`);
   }
-
+  
   //set the appropriate cookie
   res.cookie('user_id', userData.id);
   res.redirect('/urls');
@@ -117,23 +122,18 @@ app.get('/register', (req,res) => {
     res.redirect('/urls');
     return;
   }
-
   const templateVars = {user: users[req.cookies.user_id]};
-  res.render('register', templateVars);
+  res.render('urls_register', templateVars);
 });
 app.post('/register', (req,res)=>{
   // bad input check
-  if (req.body.email === '' || req.body.password === '') {
-    res.statusCode = 400;
-    res.statusMessage = 'Bad Request';
-    return res.send(`Cannot Leave Email and Password Empty`);
+  if (!req.body.email || !req.body.password) {
+    return res.status(400).send(`Cannot Leave Email and Password Empty`);
   }
   
   // user already exists in datbase
   if (isUserEmailInDatabase(req.body.email) !== false) {
-    res.statusCode = 400;
-    res.statusMessage = 'Bad Request';
-    return res.send(`User Already Exists in Database`);
+    return res.status(400).send(`User Already Exists in Database`);
   }
   
   // setup new user
@@ -153,7 +153,7 @@ app.get('/urls/new', (req,res) => {
     res.redirect('/login');
     return;
   }
-
+  
   const templateVars = {user: users[req.cookies.user_id]};
   res.render('urls_new', templateVars);
 });
@@ -161,17 +161,22 @@ app.get('/urls/new', (req,res) => {
 // show the list of urls that is stored
 app.get("/urls", (req, res) => {
   if (!users[req.cookies.user_id]) {
-    res.redirect('/login');
+    res.status(401).send('Please Login or Register');
     return;
   }
-  const templateVars = { urls: urlDatabase, user: users[req.cookies.user_id] };
+
+  let usersURL = urlsForUser(req.cookies.user_id);
+  const templateVars = { urls: usersURL, user: users[req.cookies.user_id] };
   res.render("urls_index", templateVars);
 });
 // add new url to the database
 app.post('/urls', (req, res) => {
   if (!users[req.cookies.user_id]) {
-    res.redirect('/login');
-    return;
+    return res.status(403).send('Unable to create shortURLs. Please Login');
+  }
+  
+  if (!req.body.longURL) {
+    return res.status(400).send('Invalid URL');
   }
 
   let newShortURL = generateRandomString();
@@ -182,23 +187,13 @@ app.post('/urls', (req, res) => {
   res.redirect(`/urls/${newShortURL}`);
 });
 
-
-
-
-
-
-
-
-
 // delete the url
 app.post('/urls/:shortURL/delete', (req, res)=> {
   if (!users[req.cookies.user_id]) {
-    res.redirect('/login');
-    return;
+    return res.status(403).send('Unable to Delete shortURLs');
   }
   if (urlDatabase[req.params.shortURL].userID !== req.cookies.user_id) {
-    res.redirect('/login');
-    return;
+    return res.status(403).send('Unable to Delete Another Users shortURLs');
   }
   delete urlDatabase[req.params.shortURL];
   res.redirect('/urls');
@@ -207,23 +202,26 @@ app.post('/urls/:shortURL/delete', (req, res)=> {
 // edit the url
 app.post('/urls/:shortURL', (req, res)=> {
   if (!users[req.cookies.user_id]) {
-    res.redirect('/login');
-    return;
+    return res.status(403).send('Unable to Edit shortURLs');
   }
   if (urlDatabase[req.params.shortURL].userID !== req.cookies.user_id) {
-    res.redirect('/login');
-    return;
+    return res.status(403).send('Unable to Edit Another Users shortURLs');
   }
   urlDatabase[req.params.shortURL].longURL = req.body.longURL;
-  res.redirect(`/urls/${req.params.shortURL}`);
+  // res.redirect(`/urls/${req.params.shortURL}`);
+  res.redirect(`/urls`);
 });
 
 // showing the user their newly created link
 app.get("/urls/:shortURL", (req, res) => {
+  if (!users[req.cookies.user_id]) {
+    return res.status(403).send('Please Login');
+  }
   if (!urlDatabase[req.params.shortURL]) {
-    res.statusCode = 404;
-    res.statusMessage = 'Not Found';
-    return res.send(`Provided shortURL [${req.params.shortURL}] not found in database`);
+    return res.status(404).send(`Provided shortURL [${req.params.shortURL}] not found in database`);
+  }
+  if (urlDatabase[req.params.shortURL].userID !== req.cookies.user_id) {
+    return res.status(403).send('Forbidden');
   }
   const templateVars = {
     shortURL: req.params.shortURL,
@@ -236,19 +234,11 @@ app.get("/urls/:shortURL", (req, res) => {
 // redirect to the new web form
 app.get("/u/:shortURL", (req, res) => {
   if (!urlDatabase[req.params.shortURL]) {
-    res.statusCode = 404;
-    res.statusMessage = 'Not Found';
-    return res.send(`Provided shortURL [${req.params.shortURL}] not found in database`);
+    return res.status(404).send(`Provided shortURL [${req.params.shortURL}] not found in database`);
   }
   const longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(longURL);
 });
-
-
-
-
-
-
 
 app.listen(PORT, () => {
   console.log(`Tiny app listening on port ${PORT}`);

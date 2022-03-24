@@ -15,20 +15,18 @@
       <% if(user){ %>
         <div class="d-flex flex-row">
           <form class='form-inline p-2' method="POST" action="/logout">
-            <label class="form-inline p-2" for="user">
-              Logged In As: <%= user.email %>
+            <label class="form-inline p-2" for="email">
+              <%= user.email %>
             </label>
             <button type='submit' class="btn btn-outline-dark">Logout</button>
           </form>
         </div>
         <% } else { %>
           <div class="d-flex flex-row">
-            <form class='form-inline p-2' method="GET" action="/register">
-              <button type='submit' class="btn btn-outline-primary">Register</button>
-            </form>
-            <form class='form-inline p-2' method="GET" action="/login">
-              <button type='submit' class="btn btn-outline-primary">Login</button>
-            </form>
+            <a class='form-inline p-2' href="/register"><button type='submit'
+                class="btn btn-outline-primary">Register</button></a>
+            <a class='form-inline p-2' href="/login"><button type='submit'
+                class="btn btn-outline-primary">Login</button></a>
           </div>
           <% } %>
     </div>

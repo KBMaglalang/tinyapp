@@ -28,29 +28,30 @@
       </thead>
       <tbody>
         <% for(let url in urls) { %>
-          <% if(urls[url].userID===user.id) { %>
-            <tr>
-              <td>
-                <%= url %>
-              </td>
-              <td>
-                <%= urls[url].longURL %>
-              </td>
-              <td>
-                <form method="GET" action="/urls/<%= url %>">
-                  <button type='submit' class="btn btn-outline-primary">Edit</button>
-                </form>
-              </td>
-              <td>
-                <form method="POST" action="/urls/<%= url %>/delete">
-                  <button type='submit' class="btn btn-outline-danger">Delete</button>
-                </form>
-              </td>
-            </tr>
-            <% } %>
-              <% } %>
+          <tr>
+            <td>
+              <%= url %>
+            </td>
+            <td>
+              <%= urls[url].longURL %>
+            </td>
+            <td>
+              <form method="GET" action="/urls/<%= url %>">
+                <button type='submit' class="btn btn-outline-primary">Edit</button>
+              </form>
+            </td>
+            <td>
+              <form method="POST" action="/urls/<%= url %>/delete">
+                <button type='submit' class="btn btn-outline-danger">Delete</button>
+              </form>
+            </td>
+          </tr>
+          <% } %>
       </tbody>
     </table>
+    <form method="GET" action="/urls/new">
+      <button type='submit' class="btn btn-outline-primary">Create a New Short Link</button>
+    </form>
   </main>
   <!-- Bootstrap JS -->
   <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
