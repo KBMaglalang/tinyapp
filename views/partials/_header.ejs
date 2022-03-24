@@ -15,7 +15,7 @@
       <% if(user){ %>
         <div class="d-flex flex-row">
           <form class='form-inline p-2' method="POST" action="/logout">
-            <label class="form-inline p-2" for="username">
+            <label class="form-inline p-2" for="user">
               Logged In As: <%= user.email %>
             </label>
             <button type='submit' class="btn btn-outline-dark">Logout</button>

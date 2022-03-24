@@ -32,10 +32,10 @@ const users = {
 
 
 
-const isUserInDatabase = function(userEmail) {
+const isUserEmailInDatabase = function(userEmail) {
   for (const key in users) {
     if (users[key].email === userEmail) {
-      return true;
+      return users[key];
     }
   }
   return false;
@@ -75,7 +75,23 @@ app.get("/login", (req, res) => {
   res.render("login", templateVars);
 });
 app.post('/login', (req, res) => {
-  res.cookie('username', req.body["username"]); // !!! more work related to this
+  // check if the user doesn't exist in the datbase
+  let userData = isUserEmailInDatabase(req.body.email);
+  if (userData === false) {
+    res.statusCode = 403;
+    res.statusMessage = 'Forbidden';
+    return res.send(`User Does Not Exist in Database`);
+  }
+
+  // check if the password matches with the one stored in the datbase
+  if (userData.password !== req.body.password) {
+    res.statusCode = 403;
+    res.statusMessage = 'Forbidden';
+    return res.send(`Incorrect Password`);
+  }
+
+  //set the appropriate cookie
+  res.cookie('user_id', userData.id);
   res.redirect('/urls');
 });
 
@@ -85,7 +101,7 @@ app.get('/register', (req,res) => {
   res.render('register', templateVars);
 });
 app.post('/register', (req,res)=>{
-  // bad input
+  // bad input check
   if (req.body.email === '' || req.body.password === '') {
     res.statusCode = 400;
     res.statusMessage = 'Bad Request';
@@ -93,7 +109,7 @@ app.post('/register', (req,res)=>{
   }
   
   // user already exists in datbase
-  if (isUserInDatabase(req.body.email)) {
+  if (isUserEmailInDatabase(req.body.email) !== false) {
     res.statusCode = 400;
     res.statusMessage = 'Bad Request';
     return res.send(`User Already Exists in Database`);
@@ -106,11 +122,9 @@ app.post('/register', (req,res)=>{
     email: req.body.email,
     password: req.body.password
   };
-  console.log(users);
   res.cookie('user_id', newUserRandomID);
   res.redirect('/urls');
 });
-
 
 // create a new shortened url web form
 app.get('/urls/new', (req,res) => {
