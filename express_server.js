@@ -3,6 +3,7 @@
 const express = require('express');
 const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser');
+const bcrypt = require('bcryptjs');
 
 const PORT = 8080;
 const app = express();
@@ -31,12 +32,12 @@ const users = {
   "userRandomID": {
     id: "userRandomID",
     email: "user@example.com",
-    password: "test1"
+    password: bcrypt.hashSync("test1")
   },
   "user2RandomID": {
     id: "user2RandomID",
     email: "user2@example.com",
-    password: "test2"
+    password: bcrypt.hashSync("test2")
   }
 };
 
@@ -108,7 +109,9 @@ app.post('/login', (req, res) => {
   }
 
   // check if the password matches with the one stored in the datbase
-  if (userData.password !== req.body.password) {
+  // if (userData.password !== req.body.password) {
+  console.log(users);
+  if (!bcrypt.compareSync(req.body.password,userData.password)) {
     return res.status(403).send(`Incorrect Password`);
   }
   
@@ -142,8 +145,11 @@ app.post('/register', (req,res)=>{
   users[newUserRandomID] = {
     id: newUserRandomID,
     email: req.body.email,
-    password: req.body.password
+    password: bcrypt.hashSync(req.body.password, 10)
+    // password: req.body.password
   };
+
+  console.log(users);
   res.cookie('user_id', newUserRandomID);
   res.redirect('/urls');
 });
