@@ -140,6 +140,11 @@ app.post('/register', (req,res)=>{
 
 // create a new shortened url web form
 app.get('/urls/new', (req,res) => {
+  if (!users[req.cookies.user_id]) {
+    res.redirect('/login');
+    return;
+  }
+
   const templateVars = {user: users[req.cookies.user_id]};
   res.render('urls_new', templateVars);
 });
@@ -151,6 +156,11 @@ app.get("/urls", (req, res) => {
 });
 // add new url to the database
 app.post('/urls', (req, res) => {
+  if (!users[req.cookies.user_id]) {
+    res.redirect('/login');
+    return;
+  }
+
   let newShortURL = generateRandomString();
   urlDatabase[newShortURL] = req.body.longURL;
   res.redirect(`/urls/${newShortURL}`);
