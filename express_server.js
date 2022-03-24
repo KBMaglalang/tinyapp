@@ -11,11 +11,35 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 
 
+
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com/"
 };
 
+const users = {
+  "userRandomID": {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "test1"
+  },
+  "user2RandomID": {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "test2"
+  }
+};
+
+
+
+const isUserInDatabase = function(userEmail) {
+  for (const key in users) {
+    if (users[key].email === userEmail) {
+      return true;
+    }
+  }
+  return false;
+};
 
 const generateRandomString = function() {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -27,6 +51,8 @@ const generateRandomString = function() {
   return result;
 };
 
+
+
 // root page
 app.get('/', (req, res) => {
   res.send("Hello");
@@ -37,30 +63,66 @@ app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
-// login endpoint
-app.post('/login', (req, res) => {
-  res.cookie('username', req.body["username"]);
+// user logout page
+app.post('/logout', (req, res) => {
+  res.clearCookie('user_id');
   res.redirect('/urls');
 });
 
-// logout endpoint
-app.post('/logout', (req, res) => {
-  res.clearCookie('username');
+// user login page
+app.get("/login", (req, res) => {
+  const templateVars = { urls: urlDatabase, user: users[req.cookies.user_id] };
+  res.render("login", templateVars);
+});
+app.post('/login', (req, res) => {
+  res.cookie('username', req.body["username"]); // !!! more work related to this
   res.redirect('/urls');
 });
+
+// user registration page
+app.get('/register', (req,res) => {
+  const templateVars = {user: users[req.cookies.user_id]};
+  res.render('register', templateVars);
+});
+app.post('/register', (req,res)=>{
+  // bad input
+  if (req.body.email === '' || req.body.password === '') {
+    res.statusCode = 400;
+    res.statusMessage = 'Bad Request';
+    return res.send(`Cannot Leave Email and Password Empty`);
+  }
+  
+  // user already exists in datbase
+  if (isUserInDatabase(req.body.email)) {
+    res.statusCode = 400;
+    res.statusMessage = 'Bad Request';
+    return res.send(`User Already Exists in Database`);
+  }
+  
+  // setup new user
+  let newUserRandomID = generateRandomString();
+  users[newUserRandomID] = {
+    id: newUserRandomID,
+    email: req.body.email,
+    password: req.body.password
+  };
+  console.log(users);
+  res.cookie('user_id', newUserRandomID);
+  res.redirect('/urls');
+});
+
 
 // create a new shortened url web form
 app.get('/urls/new', (req,res) => {
-  const templateVars = { username: req.cookies["username"] };
+  const templateVars = {user: users[req.cookies.user_id]};
   res.render('urls_new', templateVars);
 });
 
 // show the list of urls that is stored
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase, username: req.cookies["username"] };
+  const templateVars = { urls: urlDatabase, user: users[req.cookies.user_id] };
   res.render("urls_index", templateVars);
 });
-
 // add new url to the database
 app.post('/urls', (req, res) => {
   let newShortURL = generateRandomString();
@@ -89,7 +151,7 @@ app.get("/urls/:shortURL", (req, res) => {
   }
   const templateVars = { shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL],
-    username: req.cookies["username"]  };
+    user: users[req.cookies.user_id]  };
   res.render("urls_show", templateVars);
 });
 

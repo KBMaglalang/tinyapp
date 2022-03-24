@@ -12,21 +12,24 @@
       </div>
     </div>
     <div>
-      <% if(username){ %>
-        <form class='form-inline' method="post" action="/logout">
-          <div class="d-flex flex-row">
-            <label class="p-2" for="username">
-              Logged In As: <%= username %>
+      <% if(user){ %>
+        <div class="d-flex flex-row">
+          <form class='form-inline p-2' method="POST" action="/logout">
+            <label class="form-inline p-2" for="username">
+              Logged In As: <%= user.email %>
             </label>
-          </div>
-          <button type='submit' class="btn btn-outline-dark">Logout</button>
-        </form>
-        <% } else { %>
-          <form class='form-inline' method="post" action="/login">
-            <input class="form-control" type="text" name="username" placeholder="Username"
-              style="width: 300px; margin-right: 10px">
-            <button type='submit' class="btn btn-outline-primary">Login</button>
+            <button type='submit' class="btn btn-outline-dark">Logout</button>
           </form>
+        </div>
+        <% } else { %>
+          <div class="d-flex flex-row">
+            <form class='form-inline p-2' method="GET" action="/register">
+              <button type='submit' class="btn btn-outline-primary">Register</button>
+            </form>
+            <form class='form-inline p-2' method="GET" action="/login">
+              <button type='submit' class="btn btn-outline-primary">Login</button>
+            </form>
+          </div>
           <% } %>
     </div>
   </nav>
