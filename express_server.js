@@ -27,7 +27,6 @@ const urlDatabase = {
   }
 };
 
-
 const users = {
   "userRandomID": {
     id: "userRandomID",
@@ -40,6 +39,8 @@ const users = {
     password: "test2"
   }
 };
+
+
 
 const urlsForUser = function(id) {
   let userURL = {};
@@ -238,6 +239,10 @@ app.get("/u/:shortURL", (req, res) => {
   }
   const longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(longURL);
+});
+
+app.get("*", (req, res) => {
+  return res.status(404).send(`Not Found`);
 });
 
 app.listen(PORT, () => {
