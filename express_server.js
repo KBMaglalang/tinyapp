@@ -104,7 +104,7 @@ app.post('/login', (req, res) => {
   
   // const userData = isUserEmailInDatabase(email);
   const userData = getUserByEmail(email, users);
-  if (userData === null) {
+  if (!userData) {
     return res.status(400).send(`The username or password is incorrect. Please <a href="/login">Login</a>`);
   }
 
@@ -136,7 +136,7 @@ app.post('/register', (req,res)=>{
     return res.status(400).send(`Cannot Leave Email and Password Empty. Please <a href="/register">Register</a>`);
   }
   // user already exists in datbase
-  if (getUserByEmail(req.body.email, users) !== null) {
+  if (getUserByEmail(req.body.email, users) !== undefined) {
     return res.status(400).send(`User Already Exists in Database. Please <a href="/register">Register</a>`);
   }
   // setup new user

@@ -17,7 +17,6 @@ const getUserByEmail = function(email, database) {
       return user;
     }
   }
-  return null;
 };
 
 //  Generate a string of 6 random characters
