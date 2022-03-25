@@ -96,18 +96,15 @@ app.get("/login", (req, res) => {
 app.post('/login', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-
-  // check if the user doesn't exist in the datbase
+  // bad input check
   if (!email || !password) {
     return res.status(400).send(`Cannot Leave Email and Password Empty. Please <a href="/login">Login</a>`);
   }
-  
-  // const userData = isUserEmailInDatabase(email);
+  // check if the email exists in the database
   const userData = getUserByEmail(email, users);
   if (!userData) {
     return res.status(400).send(`The username or password is incorrect. Please <a href="/login">Login</a>`);
   }
-
   // check if the password matches with the one stored in the datbase
   bcrypt.compare(password, userData.password, (err, result) => {
     if (!result) {
@@ -156,7 +153,6 @@ app.get('/urls/new', (req,res) => {
     res.redirect('/login');
     return;
   }
-  
   const user = users[req.session.user_id];
   const templateVars = { user };
   res.render('urls_new', templateVars);
