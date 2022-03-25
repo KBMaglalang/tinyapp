@@ -12,7 +12,6 @@ const urlsForUser = function(id, urlDatabase) {
 // Check if a user is exists in the database from their email
 const getUserByEmail = function(email, database) {
   const values = Object.values(database);
-  console.log('values', values);
   for (const user of values) {
     if (user.email === email) {
       return user;
@@ -25,10 +24,6 @@ const getUserByEmail = function(email, database) {
 const generateRandomString = function() {
   return Math.random().toString(32).substring(2,8);
 };
-
-
-
-
 
 module.exports = {
   urlsForUser,
