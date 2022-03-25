@@ -77,14 +77,17 @@ const urlsForUser = function(id) {
 };
 
 // Check if a user is exists in the database from their email
-const isUserEmailInDatabase = function(userEmail) {
-  for (const key in users) {
-    if (users[key].email === userEmail) {
-      return users[key];
+const getUserByEmail = function(email, database) {
+  const values = Object.values(database);
+  console.log('values', values);
+  for (const user of values) {
+    if (user.email === email) {
+      return user;
     }
   }
-  return false;
+  return null;
 };
+
 
 //  Generate a string of 6 random characters
 const generateRandomString = function() {
@@ -133,8 +136,9 @@ app.post('/login', (req, res) => {
     return res.status(400).send(`Cannot Leave Email and Password Empty. Please <a href="/login">Login</a>`);
   }
   
-  const userData = isUserEmailInDatabase(email);
-  if (userData === false) {
+  // const userData = isUserEmailInDatabase(email);
+  const userData = getUserByEmail(email, users);
+  if (userData === null) {
     return res.status(400).send(`The username or password is incorrect. Please <a href="/login">Login</a>`);
   }
 
@@ -166,7 +170,7 @@ app.post('/register', (req,res)=>{
     return res.status(400).send(`Cannot Leave Email and Password Empty. Please <a href="/register">Register</a>`);
   }
   // user already exists in datbase
-  if (isUserEmailInDatabase(req.body.email) !== false) {
+  if (getUserByEmail(req.body.email, users) !== null) {
     return res.status(400).send(`User Already Exists in Database. Please <a href="/register">Register</a>`);
   }
   // setup new user
