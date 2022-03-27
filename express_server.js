@@ -6,6 +6,7 @@ const express = require('express');
 const bodyParser = require("body-parser");
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
+let methodOverride = require('method-override');
 const PORT = 8080;
 const app = express();
 
@@ -23,6 +24,7 @@ app.use(cookieSession({
   // Cookie Options
   maxAge: 24 * 60 * 60 * 1000 // 24 hours
 }));
+app.use(methodOverride('_method'));
 
 /*****************************
  *
@@ -184,8 +186,9 @@ app.post('/urls', (req, res) => {
 });
 
 // delete the url
-app.post('/urls/:shortURL/delete', (req, res)=> {
+app.delete('/urls/:shortURL', (req, res)=> {
   const shortURL = req.params.shortURL;
+  console.log('in the delete route');
   if (!req.session.user_id) {
     return res.status(400).send('Unable to Delete shortURLs. Please <a href="/login">Login</a>');
   }
@@ -197,7 +200,8 @@ app.post('/urls/:shortURL/delete', (req, res)=> {
 });
 
 // edit the url
-app.post('/urls/:shortURL', (req, res)=> {
+app.put('/urls/:shortURL', (req, res)=> {
+  console.log('in the edit route');
   const shortURL = req.params.shortURL;
   if (!req.session.user_id) {
     return res.status(400).send('Unable to Edit shortURLs. Please <a href="/login">Login</a>');
