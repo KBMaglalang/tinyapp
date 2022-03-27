@@ -40,6 +40,26 @@
         </div>
       </div>
     </div>
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">Visitor ID</th>
+          <th scope="col">Date and Time</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% for(let visitor of visitors) { %>
+          <tr>
+            <td>
+              <%= visitor.id %>
+            </td>
+            <td>
+              <%= visitor.time %>
+            </td>
+          </tr>
+          <% } %>
+      </tbody>
+    </table>
   </div>
   <!-- Bootstrap JS -->
   <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"

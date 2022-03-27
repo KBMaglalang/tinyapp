@@ -8,7 +8,6 @@ const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
 let methodOverride = require('method-override');
 let morgan = require('morgan');
-const raw = require('body-parser/lib/types/raw');
 const PORT = 8080;
 const app = express();
 
@@ -39,19 +38,19 @@ const urlDatabase = {
   b6UTxQ: {
     longURL: "https://www.tsn.ca",
     userID: "userRandomID",
-    visitCount: 0,
+    uniqueVisitor: [],
     visitors: []
   },
   i3BoGr: {
     longURL: "https://www.google.ca",
     userID: "userRandomID",
-    visitCount: 0,
+    uniqueVisitor: [],
     visitors: []
   },
   asdfqw: {
     longURL: "https://www.google.ca",
     userID: "user2RandomID",
-    visitCount: 0,
+    uniqueVisitor: [],
     visitors: []
   }
 };
@@ -190,14 +189,13 @@ app.post('/urls', (req, res) => {
     return res.status(406).send('Invalid URL');
   }
   const newShortURL = generateRandomString();
-  urlDatabase[newShortURL] = { longURL , userID, visitCount: 0, visitors: [] };
+  urlDatabase[newShortURL] = { longURL , userID, uniqueVisitor: [], visitors: [] };
   res.redirect(`/urls/${newShortURL}`);
 });
 
 // delete the url
 app.delete('/urls/:shortURL', (req, res)=> {
   const shortURL = req.params.shortURL;
-  console.log('in the delete route');
   if (!req.session.user_id) {
     return res.status(400).send('Unable to Delete shortURLs. Please <a href="/login">Login</a>');
   }
@@ -210,7 +208,6 @@ app.delete('/urls/:shortURL', (req, res)=> {
 
 // edit the url
 app.put('/urls/:shortURL', (req, res)=> {
-  console.log('in the edit route');
   const shortURL = req.params.shortURL;
   if (!req.session.user_id) {
     return res.status(400).send('Unable to Edit shortURLs. Please <a href="/login">Login</a>');
@@ -219,9 +216,8 @@ app.put('/urls/:shortURL', (req, res)=> {
     return res.status(403).send('Unable to Edit Another Users shortURLs');
   }
   urlDatabase[shortURL].longURL = req.body.longURL;
-  urlDatabase[shortURL].visitCount = 0;
-  // urlDatabase[shortURL].visitors = [];
   urlDatabase[shortURL].visitors.splice(0,urlDatabase[shortURL].visitors.length);
+  urlDatabase[shortURL].uniqueVisitor.splice(0,urlDatabase[shortURL].uniqueVisitor.length);
   res.redirect(`/urls`);
 });
 
@@ -240,9 +236,10 @@ app.get("/urls/:shortURL", (req, res) => {
   }
   const longURL = urlDatabase[shortURL].longURL;
   const user = users[req.session.user_id];
-  const visitCount = urlDatabase[shortURL].visitCount;
-  const uniqueVisitorCount = urlDatabase[shortURL].visitors.length;
-  const templateVars = {shortURL, longURL, user, visitCount, uniqueVisitorCount};
+  const visitCount = urlDatabase[shortURL].visitors.length;
+  const visitors = urlDatabase[shortURL].visitors;
+  const uniqueVisitorCount = urlDatabase[shortURL].uniqueVisitor.length;
+  const templateVars = {shortURL, longURL, user, visitCount, uniqueVisitorCount, visitors};
   res.render("urls_show", templateVars);
 });
 
@@ -253,15 +250,24 @@ app.get("/u/:shortURL", (req, res) => {
     return res.status(404).send(`Provided shortURL [${shortURL}] not found in database`);
   }
 
+  const newVisitor = {
+    id: '',
+    time: new Date()
+  };
+
+  console.log(req.headers.cookie);
   let rawCookies = req.headers.cookie.split('; ').filter(e => e.includes(shortURL));
-  if (!rawCookies.length || !urlDatabase[shortURL].visitors.includes(rawCookies[0].split('=')[1])) {
+  if (!rawCookies.length || !urlDatabase[shortURL].uniqueVisitor.includes(rawCookies[0].split('=')[1])) {
     const newVisitorID = generateRandomString();
     res.cookie(shortURL, newVisitorID);
-    urlDatabase[shortURL].visitors.push(newVisitorID);
+    urlDatabase[shortURL].uniqueVisitor.push(newVisitorID);
+    newVisitor.id = newVisitorID;
+  } else {
+    newVisitor.id = rawCookies[0].split('=')[1];
   }
+  urlDatabase[shortURL].visitors.push(newVisitor);
 
   const longURL = urlDatabase[shortURL].longURL;
-  urlDatabase[shortURL].visitCount++;
   res.redirect(longURL);
 });
 
