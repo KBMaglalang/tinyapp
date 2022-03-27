@@ -7,6 +7,8 @@ const bodyParser = require("body-parser");
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
 let methodOverride = require('method-override');
+let morgan = require('morgan');
+const raw = require('body-parser/lib/types/raw');
 const PORT = 8080;
 const app = express();
 
@@ -25,6 +27,7 @@ app.use(cookieSession({
   maxAge: 24 * 60 * 60 * 1000 // 24 hours
 }));
 app.use(methodOverride('_method'));
+app.use(morgan('dev'));
 
 /*****************************
  *
@@ -35,15 +38,21 @@ app.use(methodOverride('_method'));
 const urlDatabase = {
   b6UTxQ: {
     longURL: "https://www.tsn.ca",
-    userID: "userRandomID"
+    userID: "userRandomID",
+    visitCount: 0,
+    visitors: []
   },
   i3BoGr: {
     longURL: "https://www.google.ca",
-    userID: "userRandomID"
+    userID: "userRandomID",
+    visitCount: 0,
+    visitors: []
   },
   asdfqw: {
     longURL: "https://www.google.ca",
-    userID: "user2RandomID"
+    userID: "user2RandomID",
+    visitCount: 0,
+    visitors: []
   }
 };
 
@@ -181,7 +190,7 @@ app.post('/urls', (req, res) => {
     return res.status(406).send('Invalid URL');
   }
   const newShortURL = generateRandomString();
-  urlDatabase[newShortURL] = { longURL , userID };
+  urlDatabase[newShortURL] = { longURL , userID, visitCount: 0, visitors: [] };
   res.redirect(`/urls/${newShortURL}`);
 });
 
@@ -210,6 +219,9 @@ app.put('/urls/:shortURL', (req, res)=> {
     return res.status(403).send('Unable to Edit Another Users shortURLs');
   }
   urlDatabase[shortURL].longURL = req.body.longURL;
+  urlDatabase[shortURL].visitCount = 0;
+  // urlDatabase[shortURL].visitors = [];
+  urlDatabase[shortURL].visitors.splice(0,urlDatabase[shortURL].visitors.length);
   res.redirect(`/urls`);
 });
 
@@ -228,7 +240,9 @@ app.get("/urls/:shortURL", (req, res) => {
   }
   const longURL = urlDatabase[shortURL].longURL;
   const user = users[req.session.user_id];
-  const templateVars = {shortURL, longURL, user};
+  const visitCount = urlDatabase[shortURL].visitCount;
+  const uniqueVisitorCount = urlDatabase[shortURL].visitors.length;
+  const templateVars = {shortURL, longURL, user, visitCount, uniqueVisitorCount};
   res.render("urls_show", templateVars);
 });
 
@@ -238,7 +252,16 @@ app.get("/u/:shortURL", (req, res) => {
   if (!urlDatabase[shortURL]) {
     return res.status(404).send(`Provided shortURL [${shortURL}] not found in database`);
   }
+
+  let rawCookies = req.headers.cookie.split('; ').filter(e => e.includes(shortURL));
+  if (!rawCookies.length || !urlDatabase[shortURL].visitors.includes(rawCookies[0].split('=')[1])) {
+    const newVisitorID = generateRandomString();
+    res.cookie(shortURL, newVisitorID);
+    urlDatabase[shortURL].visitors.push(newVisitorID);
+  }
+
   const longURL = urlDatabase[shortURL].longURL;
+  urlDatabase[shortURL].visitCount++;
   res.redirect(longURL);
 });
 
